@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
@@ -61,11 +62,11 @@ public class Main {
 
 		LocalDateTime localStartTime = startTime;
 		for (int i=0; i < inactivityData.length; i++) {
-			System.out.println(localStartTime.toLocalDate() + " from " + localStartTime.toLocalTime() + " to " + localStartTime.plus(interval).toLocalTime() + " is " + inactivityData[i]);
+			//System.out.println(localStartTime.toLocalDate() + " from " + localStartTime.toLocalTime() + " to " + localStartTime.plus(interval).toLocalTime() + " is " + inactivityData[i]);
 			localStartTime = localStartTime.plus(interval);
 		}
 		
-		/*
+		
 		// Load the Kasteren Dataset as a list of integers
 		try(Stream<String> lines = Files.lines(Paths.get(DATA_PATH))){
 			signalDataSet = lines.filter(line -> {
@@ -93,6 +94,7 @@ public class Main {
 		
 		
 		
+		/*
 		// Load the Kasteren Dataset as a list of integers
 		try(Stream<String> lines = Files.lines(Paths.get(DATA_PATH))){
 			signalDataSet = lines.filter(line -> {
@@ -122,6 +124,10 @@ public class Main {
 			this.end = end;
 			this.sensorID = sensorID;
 			this.value = value;
+		}
+		
+		public LocalTime getStart(){
+			return start.toLocalTime();
 		}
 		
 		@Override

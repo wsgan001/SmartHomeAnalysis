@@ -3,6 +3,7 @@ package InactivityMonitoring;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class InactivityMining {
 			// apply the metric to relevent
 			LocalDateTime[] startOfInterval = {intervalDuration[0]};
 			inactivityMetric[i] = (float)filteredDataStream.mapToDouble(entry -> {
-				Duration measurement = Duration.between(startOfInterval[0], ((KasterenEntry)entry).start);
+				Duration measurement = Duration.between(startOfInterval[0], ((KasterenEntry)entry).getStart());
 				startOfInterval[0] = ((KasterenEntry)entry).start;
 				return rampFunction(measurement, 1.0f);
 			}).sum();
@@ -49,6 +50,21 @@ public class InactivityMining {
 			intervalDuration[0] = intervalDuration[1];
 			intervalDuration[1] = intervalDuration[1].plus(interval);
 		}
+	}
+	
+	static float rampFunction (long interval, long maxInterval, long rampConstant) {
+		//if (interval < 0){
+		//	System.out.println("negative interval");
+		//	return 0;
+		 //} else 
+		double h = 1/maxInterval;
+		if(interval < rampConstant){ 
+			//return (float)(Math.pow(2, interval)/(2.0 * rampConstant * maxInterval));
+			double p = 1.0 * interval / rampConstant;
+			return (float)(1/2 * p * p * rampConstant * h);
+		}else 
+			//return (float)(interval - rampConstant/2.0)/maxInterval;
+			return (float)(h * (interval - rampConstant/2.0));
 	}
 	
 	static float rampFunction (Duration measurement, float normalizationFactor) {
@@ -70,27 +86,38 @@ public class InactivityMining {
 	public static float[] getInactivity(List<Entry> dataSet, LocalDateTime start, Duration interval, int numTimeSteps, float normalizationFactor) {
 		float[] inactivityMetric = new float[numTimeSteps];
 		
+		long maxDuration = 3600;
+		long rampConstant = 300;
 
-		final LocalDateTime[] intervalDuration = new LocalDateTime[2];
-		intervalDuration[0] = start; // start of interval
-		intervalDuration[1] = start.plus(interval); // end of interval
+		final LocalDateTime[] intervalDuration = new LocalDateTime[] { start, start.plus(interval) };
+		
 		for (int i=0; i<inactivityMetric.length; i++) {
 			List<Entry> filteredData = dataSet.stream()
 			.filter(entry -> {
 				return ((KasterenEntry)entry).start.isAfter(intervalDuration[0]) && ((KasterenEntry)entry).start.isBefore(intervalDuration[1]);
-			}).collect(Collectors.toList());
+			}).sorted(Comparator.comparing(entry -> ((KasterenEntry)entry).start))
+			.collect(Collectors.toList());
+			
 			
 			// apply the metric to relevent points
-			LocalDateTime startOfInterval = intervalDuration[0];
 			if (filteredData.isEmpty()) {
-				inactivityMetric[i] = interval.toMillis() / interval.toMillis();
+				inactivityMetric[i] = 1;
 			} else {
-				inactivityMetric[i] = Duration.between(startOfInterval, ((KasterenEntry)filteredData.get(0)).start).toMillis() / normalizationFactor;
-				for (int j=1; j< filteredData.size(); j++) {
-					Duration measurement = Duration.between(((KasterenEntry)filteredData.get(j-1)).start, ((KasterenEntry)filteredData.get(j)).start);
-					inactivityMetric[i] += rampFunction(measurement, normalizationFactor);
+				long intervalTimeTotal = 0;
+				Duration measurement = Duration.between(intervalDuration[0].toLocalTime(), ((KasterenEntry)filteredData.get(0)).getStart());
+				intervalTimeTotal += measurement.getSeconds();
+				inactivityMetric[i] = measurement.getSeconds();
+				for (int j=1; j<filteredData.size(); j++) {
+					measurement = Duration.between(((KasterenEntry)filteredData.get(j-1)).getStart(), ((KasterenEntry)filteredData.get(j)).getStart());
+					intervalTimeTotal += measurement.getSeconds();
+					inactivityMetric[i] += rampFunction(measurement.getSeconds(), maxDuration, rampConstant);
 				}
-				inactivityMetric[i] += rampFunction(Duration.between(startOfInterval, intervalDuration[1]), normalizationFactor);
+				measurement = Duration.between(((KasterenEntry)filteredData.get(filteredData.size()-1)).getStart(), intervalDuration[1]);
+				intervalTimeTotal += measurement.getSeconds();
+				inactivityMetric[i] += rampFunction(measurement.getSeconds(), maxDuration, rampConstant);
+				
+				System.out.println("No. elements: " + filteredData.size() + " and Inactivity: " + inactivityMetric[i]);
+				System.out.println(Duration.between(intervalDuration[0], intervalDuration[1]) + " " + Duration.ofSeconds(intervalTimeTotal));
 			}
 			
 			intervalDuration[0] = intervalDuration[1];
