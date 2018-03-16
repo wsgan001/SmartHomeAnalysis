@@ -1,5 +1,8 @@
 package main;
 
-public interface Entry {
+import java.time.LocalDateTime;
 
+public interface Entry {
+	LocalDateTime getTime();
+	int getID();
 }

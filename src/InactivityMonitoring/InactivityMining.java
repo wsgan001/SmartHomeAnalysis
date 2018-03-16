@@ -2,128 +2,93 @@ package InactivityMonitoring;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import main.Entry;
 import main.Main.KasterenEntry;
 
 public class InactivityMining {
 
-	List<Entry> dataSet;
-	LocalDateTime start;
-	Duration interval;
-	float[] inactivityMetric;
-	
-	public void loadData(List<Entry> dataSet) {
-		this.dataSet = dataSet;
-	}
-	
-	public void setTimeStep(LocalDateTime start, Duration interval, int numTimeSteps) {
-		inactivityMetric = new float[numTimeSteps];
-	}
-	
-	//should add a predicate parameter to find which part of entry to use
-	public void processData() {
-		final LocalDateTime[] intervalDuration = new LocalDateTime[2];
-		intervalDuration[0] = start; // start of interval
-		intervalDuration[1] = start.plus(interval); // end of interval
-		for (int i=0; i<inactivityMetric.length; i++) {
-			Stream<Entry> filteredDataStream = dataSet.stream()
-			.filter(entry -> {
-				return ((KasterenEntry)entry).start.isAfter(intervalDuration[0]) && ((KasterenEntry)entry).start.isBefore(intervalDuration[1]);
-			});
-			
-			// apply the metric to relevent
-			LocalDateTime[] startOfInterval = {intervalDuration[0]};
-			inactivityMetric[i] = (float)filteredDataStream.mapToDouble(entry -> {
-				Duration measurement = Duration.between(startOfInterval[0], ((KasterenEntry)entry).getStart());
-				startOfInterval[0] = ((KasterenEntry)entry).start;
-				return rampFunction(measurement, 1.0f);
-			}).sum();
-			inactivityMetric[i] += rampFunction(Duration.between(startOfInterval[0], intervalDuration[1]), 1.0f);
-			
-			intervalDuration[0] = intervalDuration[1];
-			intervalDuration[1] = intervalDuration[1].plus(interval);
-		}
-	}
-	
-	static float rampFunction (long interval, long maxInterval, long rampConstant) {
-		//if (interval < 0){
-		//	System.out.println("negative interval");
-		//	return 0;
-		 //} else 
-		double h = 1/maxInterval;
-		if(interval < rampConstant){ 
-			//return (float)(Math.pow(2, interval)/(2.0 * rampConstant * maxInterval));
-			double p = 1.0 * interval / rampConstant;
-			return (float)(1/2 * p * p * rampConstant * h);
-		}else 
-			//return (float)(interval - rampConstant/2.0)/maxInterval;
-			return (float)(h * (interval - rampConstant/2.0));
-	}
-	
-	static float rampFunction (Duration measurement, float normalizationFactor) {
-		return rampFunctionUnit(measurement.toMillis() / normalizationFactor);
-	}
-	
-	static float rampFunctionUnit(float interval) {
-		if (interval < 1.0f) {
-			return interval * interval / 2.0f;
-		} else {
-			return interval - 0.5f;
-		}
-	}
-	
-	public float[] getInactivity() {
-		return inactivityMetric;
-	}
-	
-	public static float[] getInactivity(List<Entry> dataSet, LocalDateTime start, Duration interval, int numTimeSteps, float normalizationFactor) {
-		float[] inactivityMetric = new float[numTimeSteps];
-		
-		long maxDuration = 3600;
-		long rampConstant = 300;
+	/**
+	 * This function processes a dataset and returns the level of inactivity for a
+	 * set of predefined intervals. The resulting time domain is defined using start
+	 * as the start time, interval as the time step and numTimeSteps as the number
+	 * of time steps to be sorted into. The value of each sub-interval is
+	 * represented by a ramp function whose turning point is represented by
+	 * recoveryTimeSec.
+	 * 
+	 * @param dataSet
+	 * @param start
+	 * @param interval
+	 * @param numTimeSteps
+	 * @param recoveryTimeSec
+	 * @return an array of values in domain [0 1] representing level of inactivity
+	 * @throws Exception
+	 */
+	public static float[] getInactivity(List<Entry> dataSet, LocalDateTime start, Duration interval, int numTimeSteps,
+			int recoveryTimeSec) throws Exception {
 
+		float[] inactivityMetric = new float[numTimeSteps];
+		int maxDuration = (int) interval.getSeconds();
+		int rampConstant = recoveryTimeSec;
+
+		// Interval array set to final for use with Stream filter
 		final LocalDateTime[] intervalDuration = new LocalDateTime[] { start, start.plus(interval) };
-		
-		for (int i=0; i<inactivityMetric.length; i++) {
-			List<Entry> filteredData = dataSet.stream()
-			.filter(entry -> {
-				return ((KasterenEntry)entry).start.isAfter(intervalDuration[0]) && ((KasterenEntry)entry).start.isBefore(intervalDuration[1]);
-			}).sorted(Comparator.comparing(entry -> ((KasterenEntry)entry).start))
-			.collect(Collectors.toList());
-			
-			
-			// apply the metric to relevent points
+
+		for (int i = 0; i < inactivityMetric.length; i++) {
+			// Use Java Stream API to extract relevent entries
+			List<Entry> filteredData = dataSet.stream().filter(entry -> {
+				return ((KasterenEntry) entry).getTime().isAfter(intervalDuration[0])
+						&& ((KasterenEntry) entry).getTime().isBefore(intervalDuration[1]);
+			}).sorted(Comparator.comparing(entry -> ((KasterenEntry) entry).getTime())).collect(Collectors.toList());
+
+			// Sum individual intervals to form total value for time period
 			if (filteredData.isEmpty()) {
 				inactivityMetric[i] = 1;
 			} else {
-				long intervalTimeTotal = 0;
-				Duration measurement = Duration.between(intervalDuration[0].toLocalTime(), ((KasterenEntry)filteredData.get(0)).getStart());
-				intervalTimeTotal += measurement.getSeconds();
-				inactivityMetric[i] = measurement.getSeconds();
-				for (int j=1; j<filteredData.size(); j++) {
-					measurement = Duration.between(((KasterenEntry)filteredData.get(j-1)).getStart(), ((KasterenEntry)filteredData.get(j)).getStart());
-					intervalTimeTotal += measurement.getSeconds();
-					inactivityMetric[i] += rampFunction(measurement.getSeconds(), maxDuration, rampConstant);
+				Duration measurement = Duration.between(intervalDuration[0].toLocalTime(),
+						((KasterenEntry) filteredData.get(0)).getTime());
+				inactivityMetric[i] = measurement.getSeconds() / (float) maxDuration;
+				for (int j = 1; j < filteredData.size(); j++) {
+					measurement = Duration.between(((KasterenEntry) filteredData.get(j - 1)).getTime(),
+							((KasterenEntry) filteredData.get(j)).getTime());
+					inactivityMetric[i] += valueFunction((int) measurement.getSeconds(), maxDuration, rampConstant);
 				}
-				measurement = Duration.between(((KasterenEntry)filteredData.get(filteredData.size()-1)).getStart(), intervalDuration[1]);
-				intervalTimeTotal += measurement.getSeconds();
-				inactivityMetric[i] += rampFunction(measurement.getSeconds(), maxDuration, rampConstant);
-				
-				System.out.println("No. elements: " + filteredData.size() + " and Inactivity: " + inactivityMetric[i]);
-				System.out.println(Duration.between(intervalDuration[0], intervalDuration[1]) + " " + Duration.ofSeconds(intervalTimeTotal));
+				measurement = Duration.between(((KasterenEntry) filteredData.get(filteredData.size() - 1)).getTime(),
+						intervalDuration[1]);
+				inactivityMetric[i] += valueFunction((int) measurement.getSeconds(), maxDuration, rampConstant);
 			}
-			
+
 			intervalDuration[0] = intervalDuration[1];
 			intervalDuration[1] = intervalDuration[1].plus(interval);
 		}
-		
+
 		return inactivityMetric;
+	}
+
+	/**
+	 * Calculates the value of a sub-interval using a ramp function whereby
+	 * rampConstant is the point where the function turns from a sloped line to a
+	 * constant. Function is defined as; if interval is less than rampConstant
+	 * interval^2 / (2 * rampConstant * maxInterval) otherwise (interval -
+	 * rampConstant/2) / maxInterval
+	 * 
+	 * @param interval
+	 * @param maxInterval
+	 * @param rampConstant
+	 * @return the value of the sub-interval relative to the interval
+	 * @throws Exception
+	 *             if interval is invalid
+	 */
+	private static float valueFunction(int interval, int maxInterval, int rampConstant) throws Exception {
+		if (interval < 0)
+			throw new Exception("Value function has an invalid input");
+
+		if (interval < rampConstant)
+			return (float) (Math.pow(interval, 2) / (2.0 * rampConstant * maxInterval));
+		else
+			return (float) (interval - rampConstant / 2.0) / maxInterval;
 	}
 }
