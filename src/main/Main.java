@@ -40,7 +40,7 @@ public class Main {
 				LocalDateTime end = LocalDateTime.parse(split[1], formatter);
 				int sensorID = Integer.parseInt(split[2]);
 				int value = Integer.parseInt(split[3]);
-				return new KasterenEntry(start, end, sensorID, value);
+				return new InactivityEntry(start, end, sensorID, value);
 			}).collect(Collectors.toList());
 
 			// entryDataSet.stream().forEach(line -> System.out.println(line));
@@ -51,13 +51,13 @@ public class Main {
 		}
 
 		LocalDateTime startTime = LocalDateTime.of(2008, 02, 25, 0, 0);
-		Duration interval = Duration.ofHours(1);
+		Duration interval = Duration.ofMinutes(60);
 		int numTimeSteps = 672; // 24hours * 28days
-		int normalizationFactor = 60 * 60;
+		int recoveryTimeSec = 60 * 5; // 60sec * 5min
 		float[] inactivityData = null;
 		try {
 			inactivityData = InactivityMining.getInactivity(entryDataSet, startTime, interval, numTimeSteps,
-					normalizationFactor);
+					recoveryTimeSec);
 			LocalDateTime localStartTime = startTime;
 			for (int i = 0; i < inactivityData.length; i++) {
 				System.out.println(localStartTime.toLocalDate() + " from " + localStartTime.toLocalTime() + " to "
@@ -104,14 +104,29 @@ public class Main {
 		 * e.printStackTrace(); }catch(IOException e){ e.printStackTrace(); }
 		 */
 	}
+	
+	public static class SequenceEntry implements Entry<Integer> {
+		int entry;
+		
+		@Override
+		public LocalDateTime getTime() {
+			return LocalDateTime.MIN;
+		}
 
-	public static class KasterenEntry implements Entry {
+		@Override
+		public Integer getID() {
+			return entry;
+		}
+		
+	}
+
+	public static class InactivityEntry implements Entry<Integer> {
 		public LocalDateTime start;
 		LocalDateTime end;
 		int sensorID;
 		int value;
 
-		public KasterenEntry(LocalDateTime start, LocalDateTime end, int sensorID, int value) {
+		public InactivityEntry(LocalDateTime start, LocalDateTime end, int sensorID, int value) {
 			this.start = start;
 			this.end = end;
 			this.sensorID = sensorID;
@@ -124,7 +139,7 @@ public class Main {
 		}
 
 		@Override
-		public int getID() {
+		public Integer getID() {
 			return sensorID;
 		}
 

@@ -2,7 +2,7 @@ package main;
 
 import java.time.LocalDateTime;
 
-public interface Entry {
+public interface Entry<T> {
 	LocalDateTime getTime();
-	int getID();
+	T getID();
 }

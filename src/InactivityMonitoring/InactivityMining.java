@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import main.Entry;
-import main.Main.KasterenEntry;
+import main.Main.InactivityEntry;
 
 public class InactivityMining {
 
@@ -40,23 +40,23 @@ public class InactivityMining {
 		for (int i = 0; i < inactivityMetric.length; i++) {
 			// Use Java Stream API to extract relevent entries
 			List<Entry> filteredData = dataSet.stream().filter(entry -> {
-				return ((KasterenEntry) entry).getTime().isAfter(intervalDuration[0])
-						&& ((KasterenEntry) entry).getTime().isBefore(intervalDuration[1]);
-			}).sorted(Comparator.comparing(entry -> ((KasterenEntry) entry).getTime())).collect(Collectors.toList());
+				return ((InactivityEntry) entry).getTime().isAfter(intervalDuration[0])
+						&& ((InactivityEntry) entry).getTime().isBefore(intervalDuration[1]);
+			}).sorted(Comparator.comparing(entry -> ((InactivityEntry) entry).getTime())).collect(Collectors.toList());
 
 			// Sum individual intervals to form total value for time period
 			if (filteredData.isEmpty()) {
 				inactivityMetric[i] = 1;
 			} else {
 				Duration measurement = Duration.between(intervalDuration[0].toLocalTime(),
-						((KasterenEntry) filteredData.get(0)).getTime());
+						((InactivityEntry) filteredData.get(0)).getTime());
 				inactivityMetric[i] = measurement.getSeconds() / (float) maxDuration;
 				for (int j = 1; j < filteredData.size(); j++) {
-					measurement = Duration.between(((KasterenEntry) filteredData.get(j - 1)).getTime(),
-							((KasterenEntry) filteredData.get(j)).getTime());
+					measurement = Duration.between(((InactivityEntry) filteredData.get(j - 1)).getTime(),
+							((InactivityEntry) filteredData.get(j)).getTime());
 					inactivityMetric[i] += valueFunction((int) measurement.getSeconds(), maxDuration, rampConstant);
 				}
-				measurement = Duration.between(((KasterenEntry) filteredData.get(filteredData.size() - 1)).getTime(),
+				measurement = Duration.between(((InactivityEntry) filteredData.get(filteredData.size() - 1)).getTime(),
 						intervalDuration[1]);
 				inactivityMetric[i] += valueFunction((int) measurement.getSeconds(), maxDuration, rampConstant);
 			}

@@ -1,9 +1,13 @@
 package SequenceMining;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import main.Entry;
+import main.Main.SequenceEntry;
 
 
 public class SequenceMining {
@@ -108,7 +112,19 @@ public class SequenceMining {
 		return frequency;
 	}
 	
-	public static class Pattern{
+	public static class Pattern<T extends Entry<?>> implements Entry<Entry<?>>{
+		ArrayList<T> sequence;
 		
+		@Override
+		public LocalDateTime getTime() {
+			// TODO Auto-generated method stub
+			return LocalDateTime.MIN;
+		}
+
+		@Override
+		public Entry getID() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
 }
