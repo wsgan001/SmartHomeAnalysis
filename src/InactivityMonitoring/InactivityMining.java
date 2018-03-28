@@ -27,7 +27,7 @@ public class InactivityMining {
 	 * @return an array of values in domain [0 1] representing level of inactivity
 	 * @throws Exception
 	 */
-	public static float[] getInactivity(List<Entry> dataSet, LocalDateTime start, Duration interval, int numTimeSteps,
+	public static float[] getInactivity(List<Entry<Integer>> dataSet, LocalDateTime start, Duration interval, int numTimeSteps,
 			int recoveryTimeSec) throws Exception {
 
 		float[] inactivityMetric = new float[numTimeSteps];

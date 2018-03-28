@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 
 import InactivityMonitoring.InactivityMining;
 import SequenceMining.SequenceMining;
+import SequenceMining.SequenceMining.Pattern;
 
 public class Main {
 
@@ -24,7 +26,7 @@ public class Main {
 	public static void main(String[] args) {
 		System.out.println("Gather data...");
 		List<Integer> signalDataSet = new ArrayList<Integer>();
-		List<Entry> entryDataSet = new ArrayList<Entry>();
+		List<Entry<Integer>> entryDataSet = new ArrayList<Entry<Integer>>();
 
 		// Populate entryDataSet from file
 		try (Stream<String> lines = Files.lines(Paths.get(DATA_PATH))) {
@@ -69,6 +71,14 @@ public class Main {
 		}
 		
 
+		
+		List<Entry<Integer>> dataSet = entryDataSet.stream().map(entry -> {
+			return new SequenceEntry<Integer>(entry.getID());
+		}).collect(Collectors.toList());
+		SequenceMining.patternHierarchy(dataSet);
+		
+		
+		
 		// Load the Kasteren Dataset as a list of integers
 		try (Stream<String> lines = Files.lines(Paths.get(DATA_PATH))) {
 			signalDataSet = lines.filter(line -> {
@@ -105,8 +115,12 @@ public class Main {
 		 */
 	}
 	
-	public static class SequenceEntry implements Entry<Integer> {
-		int entry;
+	public static class SequenceEntry<E> implements Entry<E>, Pattern<E> {
+		E entry;
+		
+		public SequenceEntry(E entry) {
+			this.entry = entry;
+		}
 		
 		@Override
 		public LocalDateTime getTime() {
@@ -114,8 +128,13 @@ public class Main {
 		}
 
 		@Override
-		public Integer getID() {
+		public E getID() {
 			return entry;
+		}
+
+		@Override
+		public List<Pattern<E>> getPattern() {
+			return Collections.singletonList(this);
 		}
 		
 	}
