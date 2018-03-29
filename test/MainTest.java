@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 class MainTest {
 
 	@Test
-	void testMain() {
-		fail("Not yet implemented");
+	void testINIT() {
+		
 	}
 
 }

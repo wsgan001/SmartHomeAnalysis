@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import InactivityMonitoring.InactivityMining;
 import SequenceMining.SequenceMining;
 import SequenceMining.SequenceMining.Pattern;
+import SequenceMining.SequenceMining.PatternElement;
 
 public class Main {
 
@@ -52,6 +53,7 @@ public class Main {
 			e.printStackTrace();
 		}
 
+		System.out.println("Inactivity Mining");
 		LocalDateTime startTime = LocalDateTime.of(2008, 02, 25, 0, 0);
 		Duration interval = Duration.ofMinutes(60);
 		int numTimeSteps = 672; // 24hours * 28days
@@ -72,8 +74,9 @@ public class Main {
 		
 
 		
-		List<Entry<Integer>> dataSet = entryDataSet.stream().map(entry -> {
-			return new SequenceEntry<Integer>(entry.getID());
+		System.out.println("Sequence Mining");
+		List<PatternElement<Integer>> dataSet = entryDataSet.stream().map(entry -> {
+			return new PatternElement<Integer>(entry.getID());
 		}).collect(Collectors.toList());
 		SequenceMining.patternHierarchy(dataSet);
 		
