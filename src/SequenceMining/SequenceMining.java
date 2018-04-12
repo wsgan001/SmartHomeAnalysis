@@ -24,7 +24,7 @@ public class SequenceMining {
 	 * @param dataSet
 	 * @return
 	 */
-	private static <E> HashMap<Pattern<E>, Integer> INIT(List<PatternElement<E>> dataSet) {
+	public static <E> HashMap<Pattern<E>, Integer> INIT(List<PatternElement<E>> dataSet) {
 		HashMap<Pattern<E>, Integer> patterns = new HashMap<Pattern<E>, Integer>();
 		Pattern<E> oldSensorID = null;
 		for (PatternElement<E> element : dataSet) {
@@ -50,7 +50,7 @@ public class SequenceMining {
 	 * @param discoveredPatterns
 	 * @return
 	 */
-	private static <E> ArrayList<Pattern<E>> CANDIDATE_GENERATION(HashMap<Pattern<E>, Integer> discoveredPatterns) {
+	public static <E> ArrayList<Pattern<E>> CANDIDATE_GENERATION(HashMap<Pattern<E>, Integer> discoveredPatterns) {
 		ArrayList<Pattern<E>> candidatePatterns = new ArrayList<Pattern<E>>();
 
 		for (Pattern<E> fromPattern : discoveredPatterns.keySet()) {
@@ -86,7 +86,7 @@ public class SequenceMining {
 	 * @param minSupport
 	 * @return
 	 */
-	private static <E> HashMap<Pattern<E>, Integer> PATTERN_DISCOVERY(List<PatternElement<E>> dataSet, int minSupport) {
+	public static <E> HashMap<Pattern<E>, Integer> PATTERN_DISCOVERY(List<PatternElement<E>> dataSet, int minSupport) {
 		HashMap<Pattern<E>, Integer> discovered = INIT(dataSet);
 		List<Pattern<E>> candidates = CANDIDATE_GENERATION(discovered);
 
@@ -113,7 +113,7 @@ public class SequenceMining {
 	}
 
 	// Count the frequency of a pattern in the dataset
-	private static <E> int EVALUATE_SUPPORT(Pattern<E> pattern, List<PatternElement<E>> dataSet) {
+	public static <E> int EVALUATE_SUPPORT(Pattern<E> pattern, List<PatternElement<E>> dataSet) {
 		return (int) IntStream.range(pattern.getPattern().size(), dataSet.size()).mapToObj(index -> {
 			return dataSet.subList(index - pattern.getPattern().size(), index);
 		}).map(sublist -> {
@@ -125,6 +125,8 @@ public class SequenceMining {
 		}).count();
 	}
 
+	
+	
 	public static ArrayList<ArrayList<Integer>> patternHierarchy(
 			HashMap<ArrayList<Integer>, Integer> discoveredPatterns) {
 		ArrayList<ArrayList<Integer>> structuredPatterns = new ArrayList<ArrayList<Integer>>();
@@ -249,6 +251,11 @@ public class SequenceMining {
 		public int size() {
 			return sequence.size();
 		}
+		
+		@Override
+		public String toString() {
+			return sequence.toString();
+		}
 
 		@Override
 		public boolean equals(Object obj) {
@@ -276,5 +283,20 @@ public class SequenceMining {
 			return Collections.singletonList(this);
 		}
 
+		@Override
+		public String toString() {
+			return element.toString();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Pattern) {
+				Pattern patternObj = (Pattern)obj;
+				if (patternObj.getPattern().size() == 1 && patternObj.getPattern().contains(element)) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 }
