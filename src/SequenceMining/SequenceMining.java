@@ -9,25 +9,31 @@ import java.util.stream.IntStream;
 
 public class SequenceMining {
 
-	public static <E> void patternHierarchy(List<PatternElement<E>> dataSet) {
+	/**
+	 * Generate a pattern hierarchy
+	 * 
+	 * @param dataSet
+	 */
+	public static <E> void PATTERN_HIERARCHY(List<Element<E>> dataSet) {
 
 		HashMap<Pattern<E>, Integer> patterns = PATTERN_DISCOVERY(dataSet, 2);
 		System.out.println("Hi");
-		patterns.keySet().stream().forEach(entry -> System.out.println(entry.getPattern() + " with SUPPORT: " + patterns.get(entry)));
-		
+		patterns.keySet().stream()
+				.forEach(entry -> System.out.println(entry.getPattern() + " with SUPPORT: " + patterns.get(entry)));
+
 		return;
 	}
 
 	/**
-	 * Algorithm 2 INIT
+	 * Algorithm 2 INIT Find the pairs of elements which form the shortest patterns
 	 * 
 	 * @param dataSet
 	 * @return
 	 */
-	public static <E> HashMap<Pattern<E>, Integer> INIT(List<PatternElement<E>> dataSet) {
+	public static <E> HashMap<Pattern<E>, Integer> INIT(List<Element<E>> dataSet) {
 		HashMap<Pattern<E>, Integer> patterns = new HashMap<Pattern<E>, Integer>();
-		Pattern<E> oldSensorID = null;
-		for (PatternElement<E> element : dataSet) {
+		Element<E> oldSensorID = null;
+		for (Element<E> element : dataSet) {
 			if (oldSensorID != null) {
 				PatternSequence<E> pattern = new PatternSequence<E>();
 				pattern.add(oldSensorID);
@@ -45,7 +51,7 @@ public class SequenceMining {
 	}
 
 	/**
-	 * Algorithm 3 CANDIDATE-GENERATION
+	 * Algorithm 3 CANDIDATE-GENERATION Generate a set of possible joint patterns.
 	 * 
 	 * @param discoveredPatterns
 	 * @return
@@ -80,13 +86,16 @@ public class SequenceMining {
 	}
 
 	/**
-	 * Algorithm 1 PATTERN-DISCOVERY
+	 * Algorithm 1 PATTERN-DISCOVERY Starting with the initial set of pair patterns,
+	 * generate a set of extended patterns to add. New patterns below the min
+	 * support are ignored and ones that satisfy the minimum support replace the
+	 * sub-patterns they were generated from.
 	 * 
 	 * @param dataSet
 	 * @param minSupport
 	 * @return
 	 */
-	public static <E> HashMap<Pattern<E>, Integer> PATTERN_DISCOVERY(List<PatternElement<E>> dataSet, int minSupport) {
+	public static <E> HashMap<Pattern<E>, Integer> PATTERN_DISCOVERY(List<Element<E>> dataSet, int minSupport) {
 		HashMap<Pattern<E>, Integer> discovered = INIT(dataSet);
 		List<Pattern<E>> candidates = CANDIDATE_GENERATION(discovered);
 
@@ -112,8 +121,15 @@ public class SequenceMining {
 		return discovered;
 	}
 
-	// Count the frequency of a pattern in the dataset
-	public static <E> int EVALUATE_SUPPORT(Pattern<E> pattern, List<PatternElement<E>> dataSet) {
+	/**
+	 * Count the frequency of a pattern showing up in the dataset known as the
+	 * "support"
+	 * 
+	 * @param pattern
+	 * @param dataSet
+	 * @return
+	 */
+	public static <E> int EVALUATE_SUPPORT(Pattern<E> pattern, List<Element<E>> dataSet) {
 		return (int) IntStream.range(pattern.getPattern().size(), dataSet.size()).mapToObj(index -> {
 			return dataSet.subList(index - pattern.getPattern().size(), index);
 		}).map(sublist -> {
@@ -125,8 +141,12 @@ public class SequenceMining {
 		}).count();
 	}
 
-	
-	
+	/**
+	 * Generate a pattern hierarchy
+	 * 
+	 * @param discoveredPatterns
+	 * @return
+	 */
 	public static ArrayList<ArrayList<Integer>> patternHierarchy(
 			HashMap<ArrayList<Integer>, Integer> discoveredPatterns) {
 		ArrayList<ArrayList<Integer>> structuredPatterns = new ArrayList<ArrayList<Integer>>();
@@ -134,6 +154,16 @@ public class SequenceMining {
 		return structuredPatterns;
 	}
 
+	/**
+	 * Algorithm 1 PATTERN-DISCOVERY Starting with the initial set of pair patterns,
+	 * generate a set of extended patterns to add. New patterns below the min
+	 * support are ignored and ones that satisfy the minimum support replace the
+	 * sub-patterns they were generated from.
+	 * 
+	 * @param dataSet
+	 * @param minimumSupport
+	 * @return
+	 */
 	public static HashMap<ArrayList<Integer>, Integer> patternDiscovery(List<Integer> dataSet, int minimumSupport) {
 		HashMap<ArrayList<Integer>, Integer> discoveredPatterns = init(dataSet);
 		ArrayList<ArrayList<Integer>> candidatePatterns = candGen(discoveredPatterns);
@@ -161,6 +191,12 @@ public class SequenceMining {
 		return discoveredPatterns;
 	}
 
+	/**
+	 * Algorithm 3 CANDIDATE-GENERATION Generate a set of possible joint patterns.
+	 * 
+	 * @param discoveredPatterns
+	 * @return
+	 */
 	public static ArrayList<ArrayList<Integer>> candGen(HashMap<ArrayList<Integer>, Integer> discoveredPatterns) {
 		ArrayList<ArrayList<Integer>> candidatePatterns = new ArrayList<ArrayList<Integer>>();
 
@@ -190,6 +226,12 @@ public class SequenceMining {
 		return candidatePatterns;
 	}
 
+	/**
+	 * Algorithm 2 INIT Find the pairs of elements which form the shortest patterns
+	 * 
+	 * @param dataSet
+	 * @return
+	 */
 	public static HashMap<ArrayList<Integer>, Integer> init(List<Integer> dataSet) {
 		HashMap<ArrayList<Integer>, Integer> patterns = new HashMap<ArrayList<Integer>, Integer>();
 
@@ -212,6 +254,14 @@ public class SequenceMining {
 		return patterns;
 	}
 
+	/**
+	 * Count the frequency of a pattern showing up in the dataset known as the
+	 * "support"
+	 * 
+	 * @param pattern
+	 * @param dataSet
+	 * @return
+	 */
 	public static int evaluateSupport(List<Integer> pattern, List<Integer> dataSet) {
 		int frequency = -1;
 		int index = 0;
@@ -251,7 +301,7 @@ public class SequenceMining {
 		public int size() {
 			return sequence.size();
 		}
-		
+
 		@Override
 		public String toString() {
 			return sequence.toString();
@@ -271,10 +321,10 @@ public class SequenceMining {
 		}
 	}
 
-	public static class PatternElement<E> implements Pattern<E> {
+	public static class Element<E> implements Pattern<E> {
 		E element;
 
-		public PatternElement(E element) {
+		public Element(E element) {
 			this.element = element;
 		}
 
@@ -287,16 +337,30 @@ public class SequenceMining {
 		public String toString() {
 			return element.toString();
 		}
-		
+
+		// @Override
+		// public boolean equals(Object obj) {
+		// if (obj instanceof Pattern) {
+		// Pattern patternObj = (Pattern)obj;
+		// if (patternObj.getPattern().size() == 1 &&
+		// patternObj.getPattern().contains(element)) {
+		// return true;
+		// }
+		// }
+		// return false;
+		// }
+
 		@Override
 		public boolean equals(Object obj) {
-			if (obj instanceof Pattern) {
-				Pattern patternObj = (Pattern)obj;
-				if (patternObj.getPattern().size() == 1 && patternObj.getPattern().contains(element)) {
-					return true;
-				}
-			}
-			return false;
+			if (obj instanceof Pattern)
+				return this.getPattern().equals(((Pattern<E>) obj).getPattern());
+			else
+				return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return element.hashCode();
 		}
 	}
 }

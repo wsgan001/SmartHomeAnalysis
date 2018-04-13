@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 import InactivityMonitoring.InactivityMining;
 import SequenceMining.SequenceMining;
 import SequenceMining.SequenceMining.Pattern;
-import SequenceMining.SequenceMining.PatternElement;
+import SequenceMining.SequenceMining.Element;
 
 public class Main {
 
@@ -74,11 +74,11 @@ public class Main {
 		
 
 		
-		System.out.println("Sequence Mining");
-		List<PatternElement<Integer>> dataSet = entryDataSet.stream().map(entry -> {
-			return new PatternElement<Integer>(entry.getID());
-		}).collect(Collectors.toList());
-		SequenceMining.patternHierarchy(dataSet);
+		//System.out.println("Sequence Mining");
+		//List<Element<Integer>> dataSet = entryDataSet.stream().map(entry -> {
+		//	return new Element<Integer>(entry.getID());
+		//}).collect(Collectors.toList());
+		//SequenceMining.PATTERN_HIERARCHY(dataSet);
 		
 		
 		
@@ -102,29 +102,33 @@ public class Main {
 		HashMap<ArrayList<Integer>, Integer> patterns = SequenceMining.patternDiscovery(signalDataSet, 1);
 		patterns.entrySet().stream().sorted((e1, e2) -> {
 			return Integer.compare(e1.getKey().size(), e2.getKey().size());
-		});
-		// .forEach(entry -> System.out.println(entry.getKey() + " = " +
-		// entry.getValue()));
+		}).forEach(entry -> System.out.println(entry.getKey() + " = " + entry.getValue()));
 
-		/*
-		 * // Load the Kasteren Dataset as a list of integers try(Stream<String> lines =
-		 * Files.lines(Paths.get(DATA_PATH))){ signalDataSet = lines.filter(line -> {
-		 * String[] split = line.split("\t"); if (split.length > 3 &&
-		 * Character.isDigit(split[SENSOR_ID_INDEX].charAt(0))) return true; return
-		 * false; }).map(line -> { return
-		 * Integer.parseInt(line.split("\t")[SENSOR_ID_INDEX]);
-		 * }).collect(Collectors.toList()); }catch(FileNotFoundException e){
-		 * e.printStackTrace(); }catch(IOException e){ e.printStackTrace(); }
-		 */
+		
+		// Load the Kasteren Dataset as a list of integers 
+		/*try(Stream<String> lines = Files.lines(Paths.get(DATA_PATH))){
+			signalDataSet = lines.filter(line -> {
+				String[] split = line.split("\t");
+				if (split.length > 3 && Character.isDigit(split[SENSOR_ID_INDEX].charAt(0))) 
+					return true; 
+				return false; 
+		}).map(line -> { 
+			return Integer.parseInt(line.split("\t")[SENSOR_ID_INDEX]);
+		}).collect(Collectors.toList()); 
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+		}catch(IOException e){ 
+			e.printStackTrace(); 
+		}*/
 	}
-	
+
 	public static class SequenceEntry<E> implements Entry<E>, Pattern<E> {
 		E entry;
-		
+
 		public SequenceEntry(E entry) {
 			this.entry = entry;
 		}
-		
+
 		@Override
 		public LocalDateTime getTime() {
 			return LocalDateTime.MIN;
@@ -139,7 +143,7 @@ public class Main {
 		public List<Pattern<E>> getPattern() {
 			return Collections.singletonList(this);
 		}
-		
+
 	}
 
 	public static class InactivityEntry implements Entry<Integer> {

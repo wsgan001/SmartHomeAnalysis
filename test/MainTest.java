@@ -11,20 +11,20 @@ import org.junit.jupiter.api.Test;
 
 import SequenceMining.SequenceMining;
 import SequenceMining.SequenceMining.Pattern;
-import SequenceMining.SequenceMining.PatternElement;
+import SequenceMining.SequenceMining.Element;
 import SequenceMining.SequenceMining.PatternSequence;
 
 class MainTest {
 
 	@Test
 	void testINIT() {
-		List<PatternElement<Integer>> dataSet = new ArrayList<PatternElement<Integer>>();
-		dataSet.add(new PatternElement<Integer>(2));
-		dataSet.add(new PatternElement<Integer>(5));
-		dataSet.add(new PatternElement<Integer>(3));
-		dataSet.add(new PatternElement<Integer>(7));
-		dataSet.add(new PatternElement<Integer>(5));
-		dataSet.add(new PatternElement<Integer>(3));
+		List<Element<Integer>> dataSet = new ArrayList<Element<Integer>>();
+		dataSet.add(new Element<Integer>(2));
+		dataSet.add(new Element<Integer>(5));
+		dataSet.add(new Element<Integer>(3));
+		dataSet.add(new Element<Integer>(7));
+		dataSet.add(new Element<Integer>(5));
+		dataSet.add(new Element<Integer>(3));
 		
 		HashMap<Pattern<Integer>, Integer> initPatterns = SequenceMining.INIT(dataSet);
 		initPatterns.keySet().stream().forEach(key -> {
@@ -34,11 +34,11 @@ class MainTest {
 			System.out.println(initPatterns.get(key));
 		});
 		
-		Pattern<Integer> existingPattern = new PatternSequence<Integer>();
-		existingPattern.getPattern().add(new PatternElement<Integer>(5));
-		existingPattern.getPattern().add(new PatternElement<Integer>(3));
+		PatternSequence<Integer> existingPattern = new PatternSequence<Integer>();
+		existingPattern.add(new Element<Integer>(5));
+		existingPattern.add(new Element<Integer>(3));
 		
-		assertTrue(initPatterns.containsKey(existingPattern));
+		//assertTrue(initPatterns.containsKey(existingPattern));
 		assertThat(initPatterns.get(existingPattern), is(1));
 	}
 
